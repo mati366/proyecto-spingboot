@@ -1,0 +1,12 @@
+cocacola_high = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.sa-santiago-1.oraclecloud.com))(connect_data=(service_name=g857cf8bd43b89b_cocacola_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+cocacola_low = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.sa-santiago-1.oraclecloud.com))(connect_data=(service_name=g857cf8bd43b89b_cocacola_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+cocacola_medium = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.sa-santiago-1.oraclecloud.com))(connect_data=(service_name=g857cf8bd43b89b_cocacola_medium.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+cocacola_tp = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.sa-santiago-1.oraclecloud.com))(connect_data=(service_name=g857cf8bd43b89b_cocacola_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+cocacola_tpurgent = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.sa-santiago-1.oraclecloud.com))(connect_data=(service_name=g857cf8bd43b89b_cocacola_tpurgent.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+
+
