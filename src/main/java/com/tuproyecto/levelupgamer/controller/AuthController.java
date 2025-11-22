@@ -1,11 +1,11 @@
 package com.tuproyecto.levelupgamer.controller;
 
-import com.tuproyecto.levelupgamer.User; // Tu Entidad
-import com.tuproyecto.levelupgamer.repository.UserRepository; // Repositorio de User
-import com.tuproyecto.levelupgamer.dto.AuthResponse; // DTO de respuesta
-import com.tuproyecto.levelupgamer.dto.LoginRequest; // DTO de login
-import com.tuproyecto.levelupgamer.dto.RegisterRequest; // DTO de registro
-import com.tuproyecto.levelupgamer.service.JwtService; // Servicio de JWT
+import com.tuproyecto.levelupgamer.User;
+import com.tuproyecto.levelupgamer.repository.UserRepository;
+import com.tuproyecto.levelupgamer.dto.AuthResponse;
+import com.tuproyecto.levelupgamer.dto.LoginRequest;
+import com.tuproyecto.levelupgamer.dto.RegisterRequest;
+import com.tuproyecto.levelupgamer.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,21 +18,25 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+// Nuevos imports necesarios
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
-@RequestMapping("/api/auth") 
+@RequestMapping("/api/auth")
 public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private PasswordEncoder passwordEncoder; 
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private JwtService jwtService; 
+    private JwtService jwtService;
 
     @Autowired
-    private AuthenticationManager authenticationManager; 
+    private AuthenticationManager authenticationManager;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
@@ -41,49 +45,52 @@ public class AuthController {
             return ResponseEntity.badRequest().body(new AuthResponse("Error: El email ya está en uso."));
         }
 
-        // --- CAMBIOS AQUÍ ---
-
-        // 1. Creamos un nuevo usuario
         User newUser = new User();
-        newUser.setEmail(request.getUsername()); // React envía 'username' como email
+        newUser.setEmail(request.getUsername());
         newUser.setPassword(passwordEncoder.encode(request.getPassword()));
-        
-        // 2. AÑADIDO: Guardamos la fecha de nacimiento que viene en el request
-        newUser.setBirthDate(request.getBirthDate()); 
-        
-        // 3. AÑADIDO: Asignamos el rol por defecto
-        newUser.setRole("user"); 
+        newUser.setBirthDate(request.getBirthDate());
+        newUser.setRole("user"); // Por defecto es user
 
-        // 4. Guardamos el usuario en la base de datos
         User savedUser = userRepository.save(newUser);
 
-        // --- FIN DE LOS CAMBIOS ---
-
-        // Generamos un token para que inicie sesión automáticamente
         UserDetails userDetails = new org.springframework.security.core.userdetails.User(
             savedUser.getEmail(),
             savedUser.getPassword(),
-            java.util.Collections.emptyList() 
+            java.util.Collections.emptyList()
         );
         
-        String token = jwtService.generateToken(userDetails);
+        // 🟢 CORRECCIÓN: Añadimos el rol al token
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("role", savedUser.getRole()); // "user"
+
+        String token = jwtService.generateToken(extraClaims, userDetails);
 
         return ResponseEntity.ok(new AuthResponse(token));
     }
 
-    // El método login() no necesita cambios
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
-                request.getUsername(), // El email
-                request.getPassword()  // La contraseña
+                request.getUsername(),
+                request.getPassword()
             )
         );
         
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String token = jwtService.generateToken(userDetails);
+        
+        // 🟢 CORRECCIÓN CRÍTICA:
+        // Buscamos al usuario en la BD para saber qué rol tiene REALMENTE (ej. "admin")
+        User dbUser = userRepository.findByEmail(request.getUsername()).orElseThrow();
+        
+        // Ponemos ese rol dentro del token
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("role", dbUser.getRole()); 
+        
+        // Generamos el token CON el rol dentro
+        String token = jwtService.generateToken(extraClaims, userDetails);
+        
         return ResponseEntity.ok(new AuthResponse(token));
     }
 }
